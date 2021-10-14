@@ -23,8 +23,9 @@ const checkApiDirExists = async (): Promise<boolean> => {
   const dirCreated = await createRouteDir("dumb");
 
   //TODO error handler
-  if (typeof dirCreated === "string") {
-    // process.chdir(dirCreated);
-  }
+  // if (typeof dirCreated === "string") {
+  process.chdir("dumb");
+  console.log(process.cwd());
+  // }
   // createMethodFile("get")
 })();

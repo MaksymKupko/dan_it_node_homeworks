@@ -1,11 +1,10 @@
 import chalk from "chalk";
 import { mkdir } from "fs/promises";
 
-export const createRouteDir = async (route: string): Promise<string | boolean> => {
+export const createRouteDir = async (route: string): Promise<boolean> => {
   try {
-    const path = await mkdir(route);
-    console.log(path);
-    return "ololo";
+    await mkdir(route);
+    return true;
     // return true;
   } catch (error) {
     //  `Folder "${route}" already exists`;
