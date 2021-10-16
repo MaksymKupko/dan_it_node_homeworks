@@ -18,5 +18,6 @@ export const createIndexTemplate = (name: string): string => {
 	export default router;
 	`;
 
+  console.log(template);
   return template;
 };

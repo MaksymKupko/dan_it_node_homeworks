@@ -3,6 +3,7 @@ import { mkdir, opendir, readdir, writeFile } from "fs/promises";
 import path from "path";
 import { createMethodFile } from "./createMethodFile";
 import { createRouteDir } from "./createRouteDir";
+import { createIndexTemplate } from "./templates/createIndexTemplate";
 
 const srcDir = path.join(process.cwd(), "src");
 const apiDirPath = path.join(srcDir, "api");
@@ -25,7 +26,7 @@ const checkApiDirExists = async (): Promise<boolean> => {
   //TODO error handler
   // if (typeof dirCreated === "string") {
   process.chdir("dumb");
-  console.log(process.cwd());
+  createIndexTemplate("dumb");
   // }
   // createMethodFile("get")
 })();
