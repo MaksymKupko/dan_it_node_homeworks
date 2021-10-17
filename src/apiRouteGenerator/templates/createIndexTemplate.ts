@@ -1,23 +1,26 @@
 import { capitalizeString } from "../../utils/capitalizeString";
 
 export const createIndexTemplate = (name: string): string => {
-  const capitalizedName = capitalizeString(name);
+  const routeName = capitalizeString(name);
 
   const template = `
 	import { Router } from 'express';
-	import { create${capitalizedName} } from './post';
-	import { get${capitalizedName}s, get${capitalizedName}ById } from './get';
+	import { get${routeName} } from './get';
+	import { post${routeName} } from './post';
+	import { patch${routeName} } from './patch';
+	import { delete${routeName} } from './delete';
+	import { put${routeName} } from './put';
 
 	const router = Router();
 
-	router.post('/', create${capitalizedName});
-	router.get('/', get${capitalizedName}s);
+	router.get('/', get${routeName});
+	router.post('/', post${routeName});
+	router.patch('/', patch${routeName});
+	router.delete('/', delete${routeName});
+	router.put('/', put${routeName});
 
-	router.get('/:id', get${capitalizedName}ById);
 
 	export default router;
 	`;
-
-  console.log(template);
   return template;
 };
