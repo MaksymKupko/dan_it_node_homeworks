@@ -1,1 +1,1 @@
-export type Methods = "get" | "post" | "put" | "delete" | "patch";
+export type Methods = readonly ["get", "post", "put", "delete", "patch"];
