@@ -1,11 +1,16 @@
 {
-  "name": "vladshlyapa",
+  "name": "cli-shlyapa-generator",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "bin": "lib/index.js",
   "scripts": {
-    "dev": "ts-node src/index.ts"
+    "dev": "ts-node src/index.ts",
+    "build": "tsc --build"
   },
+  "files": [
+    "lib/**/*"
+  ],
   "keywords": [],
   "author": "",
   "license": "ISC",
