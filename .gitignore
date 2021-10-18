@@ -1,4 +1,5 @@
 node_modules
 lib
 exampleApi
+src/api
 .DS_Store
