@@ -1,5 +1,5 @@
+import { access, appendFile, mkdir, open, readdir, writeFile } from "fs/promises";
 import path from "path";
-import { mkdir, opendir, readdir, writeFile, appendFile, open } from "fs/promises";
 
 export default class Generator {
   readonly methods: string[] = ["get", "post", "put", "delete", "patch"];
@@ -13,14 +13,42 @@ export default class Generator {
   constructor(route: string) {
     this.route = route;
     this.capRoute = this.capitalize(this.route);
-    this.srcDirPath = path.join(process.cwd(), "src");
-    this.apiDirPath = path.join(this.srcDirPath, "api");
-    this.routerDirPath = path.join(this.apiDirPath, this.route);
+    this.srcDirPath = "";
+    this.apiDirPath = "";
+    this.routerDirPath = "";
     this.routerDirCreated = false;
   }
 
   capitalize(string: string): string {
     return `${string[0].toUpperCase()}${string.substring(1)}`;
+  }
+
+  async getRootFolderPath(): Promise<string> {
+    const paths = module.paths;
+    let result: string | null = null;
+    for (let p of paths) {
+      try {
+        await access(p);
+        result = path.dirname(p);
+      } catch (error) {}
+    }
+
+    if (!result) {
+      throw new Error("Cannot find root folder of project");
+    }
+    return result;
+  }
+
+  async setDirPaths(): Promise<boolean> {
+    try {
+      const rootDirPath = await this.getRootFolderPath();
+      this.srcDirPath = path.join(rootDirPath, "src");
+      this.apiDirPath = path.join(this.srcDirPath, "api");
+      this.routerDirPath = path.join(this.apiDirPath, this.route);
+      return true;
+    } catch (error) {
+      throw error;
+    }
   }
 
   protected createRouteMethodTemplate(method: string): string {
@@ -67,7 +95,7 @@ export default router;
 
   async createRouteDir(): Promise<boolean> {
     try {
-      await mkdir(this.routerDirPath);
+      await mkdir(this.routerDirPath, { recursive: true });
       this.routerDirCreated = true;
       return true;
     } catch (error) {
@@ -123,7 +151,8 @@ export default router;
       process.chdir(this.apiDirPath);
       const file = await open("index.ts", "r");
       const content = await file.readFile("utf-8");
-      const arr = content.split("\n");
+      const splitTerm = content.includes("\r\n") ? "\r\n" : "\n";
+      const arr = content.split(splitTerm);
       const index = arr.findIndex(item => item == "");
       arr.splice(index, 0, importStr);
       arr.splice(-2, 0, appUseStr);
