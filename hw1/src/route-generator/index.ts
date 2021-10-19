@@ -8,6 +8,7 @@ export const start = async () => {
     if (!route) throw new Error("You didn't specified route name argument.");
 
     const generator = new Generator(route);
+    // await generator.getRootFolderPath();
     await generator.setDirPaths();
     await generator.createRouteDir();
     await generator.createAllMethodsFiles();

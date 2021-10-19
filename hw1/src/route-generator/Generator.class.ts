@@ -23,15 +23,25 @@ export default class Generator {
     return `${string[0].toUpperCase()}${string.substring(1)}`;
   }
 
-  async getRootFolderPath(): Promise<string> {
-    const paths = module.paths;
-    let result: string | null = null;
-    for (let p of paths) {
+  async findNodeModules(currentDir: string): Promise<string | null> {
+    let currentPath: string = currentDir;
+    let initialPath: string = "";
+    do {
       try {
-        await access(p);
-        result = path.dirname(p);
-      } catch (error) {}
-    }
+        initialPath = currentPath;
+        await access(path.join(initialPath, "node_modules"));
+        return initialPath;
+      } catch (error) {
+        process.chdir("../");
+        currentPath = process.cwd();
+      }
+    } while (currentPath !== initialPath);
+    return null;
+  }
+
+  async getRootFolderPath(): Promise<string> {
+    let currentPath: string = process.cwd();
+    let result: string | null = await this.findNodeModules(currentPath);
 
     if (!result) {
       throw new Error("Cannot find root folder of project");
@@ -160,6 +170,7 @@ export default router;
       await file.close();
       return result;
     } catch (error) {
+      console.log(error);
       throw new Error("Error during api index template creating");
     }
   }
