@@ -1,3 +1,4 @@
+import chalk from "chalk";
 import { access, appendFile, mkdir, open, readdir, writeFile } from "fs/promises";
 import path from "path";
 
@@ -23,13 +24,13 @@ export default class Generator {
     return `${string[0].toUpperCase()}${string.substring(1)}`;
   }
 
-  async findNodeModules(currentDir: string): Promise<string | null> {
+  async findPkgJson(currentDir: string): Promise<string | null> {
     let currentPath: string = currentDir;
     let initialPath: string = "";
     do {
       try {
         initialPath = currentPath;
-        await access(path.join(initialPath, "node_modules"));
+        await access(path.join(initialPath, "package.json"));
         return initialPath;
       } catch (error) {
         process.chdir("../");
@@ -41,7 +42,7 @@ export default class Generator {
 
   async getRootFolderPath(): Promise<string> {
     let currentPath: string = process.cwd();
-    let result: string | null = await this.findNodeModules(currentPath);
+    let result: string | null = await this.findPkgJson(currentPath);
 
     if (!result) {
       throw new Error("Cannot find root folder of project");
@@ -105,11 +106,11 @@ export default router;
 
   async createRouteDir(): Promise<boolean> {
     try {
-      await mkdir(this.routerDirPath, { recursive: true });
+      await mkdir(this.routerDirPath);
       this.routerDirCreated = true;
       return true;
     } catch (error) {
-      throw new Error(`Unable to create ${this.route} folder. Maybe it exists already.`);
+      throw new Error(`Folder ${this.route} already exists.`);
     }
   }
 

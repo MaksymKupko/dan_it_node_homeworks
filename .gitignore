@@ -3,3 +3,4 @@ lib
 exampleApi
 src/api
 .DS_Store
+package-lock.json
