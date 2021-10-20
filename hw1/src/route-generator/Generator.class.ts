@@ -2,7 +2,8 @@ import { access, appendFile, mkdir, open, readdir, stat, writeFile } from "fs/pr
 import path from "path";
 
 export default class Generator {
-  readonly methods: string[] = ["get", "post", "put", "delete", "patch"];
+  readonly avalMethods: string[] = ["get", "post", "put", "delete", "patch"];
+  argMethods: string[];
   route: string;
   capRoute: string;
   srcDirPath: string;
@@ -10,7 +11,8 @@ export default class Generator {
   routerDirPath: string;
   routerDirCreated: boolean;
 
-  constructor(route: string) {
+  constructor(route: string, argMethods: string[]) {
+    this.argMethods = argMethods.filter(method => this.avalMethods.includes(method));
     this.route = route;
     this.capRoute = this.capitalize(this.route);
     this.srcDirPath = "";
@@ -74,21 +76,15 @@ export const ${method}${this.capRoute} = async (req:Request, res:Response) => {
 
   protected createRouteIndexTemplate(): string {
     const route = this.capRoute;
-
+    const methods = this.argMethods.length ? this.argMethods : this.avalMethods;
+    const importsStr = methods.map(method => `import { ${method}${route} } from './${method}';`).join("\n");
+    const routerStr = methods.map(method => `router.${method}('/', ${method}${route});`).join("\n");
     return `import { Router } from 'express';
-import { get${route} } from './get';
-import { post${route} } from './post';
-import { patch${route} } from './patch';
-import { delete${route} } from './delete';
-import { put${route} } from './put';
+${importsStr}
 
 const router = Router();
 
-router.get('/', get${route});
-router.post('/', post${route});
-router.patch('/', patch${route});
-router.delete('/', delete${route});
-router.put('/', put${route});
+${routerStr}
 
 export default router; 
 		`;
@@ -166,7 +162,8 @@ export default router;
   async createAllMethodsFiles(): Promise<boolean> {
     try {
       process.chdir(this.routerDirPath);
-      await Promise.all(this.methods.map(method => this.createRouteMethodFile(method)));
+      const methods = this.argMethods.length ? this.argMethods : this.avalMethods;
+      await Promise.all(methods.map(method => this.createRouteMethodFile(method)));
       return true;
     } catch (error) {
       throw new Error("Error during methods files creating");

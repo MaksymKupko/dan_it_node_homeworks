@@ -4,10 +4,11 @@ const log = console.log;
 
 export const start = async () => {
   try {
-    const route = process.argv[2] || null;
+    const args = process.argv.splice(2);
+    const [route = null, ...argMethods] = args;
     if (!route) throw new Error("You didn't specified route name argument.");
 
-    const generator = new Generator(route);
+    const generator = new Generator(route, argMethods);
     await generator.setDirPaths();
     await generator.checkApiDirExists();
     await generator.createRouteDir();
