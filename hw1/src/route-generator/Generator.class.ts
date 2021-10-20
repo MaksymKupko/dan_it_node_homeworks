@@ -1,5 +1,6 @@
 import { access, appendFile, mkdir, open, readdir, stat, writeFile } from "fs/promises";
 import path from "path";
+import Pluralize from "typescript-pluralize";
 
 export default class Generator {
   readonly avalMethods: string[] = ["get", "post", "put", "delete", "patch"];
@@ -13,7 +14,7 @@ export default class Generator {
 
   constructor(route: string, argMethods: string[]) {
     this.argMethods = argMethods.filter(method => this.avalMethods.includes(method));
-    this.route = route;
+    this.route = Pluralize.plural(route);
     this.capRoute = this.capitalize(this.route);
     this.srcDirPath = "";
     this.apiDirPath = "";
