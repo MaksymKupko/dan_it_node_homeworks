@@ -1,5 +1,4 @@
-import chalk from "chalk";
-import { access, appendFile, mkdir, open, readdir, writeFile } from "fs/promises";
+import { access, appendFile, mkdir, open, readdir, stat, writeFile } from "fs/promises";
 import path from "path";
 
 export default class Generator {
@@ -96,21 +95,40 @@ export default router;
   }
 
   async checkApiDirExists(): Promise<boolean> {
-    const directories: string[] = await readdir(this.srcDirPath);
-    if (!directories.includes("api")) {
-      throw new Error("api folder doesn't exist");
-    } else {
+    try {
+      const dirExists = await this.checkDirExist(this.srcDirPath, "api");
+      if (!dirExists) {
+        throw new Error(`api folder doesn't exist`);
+      }
       return true;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async checkDirExist(p: string, dirName: string): Promise<boolean> {
+    try {
+      const dirContent: string[] = await readdir(p);
+      if (!dirContent.includes(dirName) || !(await stat(path.join(p, dirName))).isDirectory()) {
+        return false;
+      }
+      return true;
+    } catch (error) {
+      throw error;
     }
   }
 
   async createRouteDir(): Promise<boolean> {
     try {
+      const dirExists = await this.checkDirExist(this.apiDirPath, this.route);
+      if (dirExists) {
+        throw new Error(`${this.route} dir already exists`);
+      }
       await mkdir(this.routerDirPath);
       this.routerDirCreated = true;
       return true;
     } catch (error) {
-      throw new Error(`Folder ${this.route} already exists.`);
+      throw error;
     }
   }
 
@@ -155,23 +173,43 @@ export default router;
     }
   }
 
+  async readFile(path: string): Promise<string | boolean> {
+    try {
+      const file = await open(path, "r");
+      const content: string = await file.readFile("utf-8");
+      await file.close();
+      return content;
+    } catch (error) {
+      return false;
+    }
+  }
+
   async createApiIndexTemplate(): Promise<string> {
     const importStr = `import ${this.route}Router from "./${this.route}/index;`;
-    const appUseStr = `  app.use("/${this.route}", ${this.route}Router);`;
+    const appUseStr = `app.use("/${this.route}", ${this.route}Router);`;
     try {
       process.chdir(this.apiDirPath);
-      const file = await open("index.ts", "r");
-      const content = await file.readFile("utf-8");
-      const splitTerm = content.includes("\r\n") ? "\r\n" : "\n";
-      const arr = content.split(splitTerm);
-      const index = arr.findIndex(item => item == "");
-      arr.splice(index, 0, importStr);
-      arr.splice(-2, 0, appUseStr);
-      const result = arr.join("\n");
-      await file.close();
-      return result;
+      const content = await this.readFile("index.ts");
+      if (typeof content === "string" && content !== "") {
+        const splitTerm = content.includes("\r\n") ? "\r\n" : "\n";
+        const arr = content.split(splitTerm);
+        const index = arr.findIndex(item => item == "");
+        arr.splice(index, 0, importStr);
+        arr.splice(-2, 0, `  ${appUseStr}`);
+        const result = arr.join("\n");
+        return result;
+      } else {
+        const result = `import { Express, json } from 'express';
+${importStr}
+
+export const registerRouters = (app: Express) => {
+	app.use(json());
+	${appUseStr}
+};
+`;
+        return result;
+      }
     } catch (error) {
-      console.log(error);
       throw new Error("Error during api index template creating");
     }
   }
@@ -181,7 +219,6 @@ export default router;
       process.chdir(this.apiDirPath);
       // const file = await open("index.ts", "a");
       const template = await this.createApiIndexTemplate();
-
       await writeFile("index.ts", template);
       // await file.close();
       return true;
