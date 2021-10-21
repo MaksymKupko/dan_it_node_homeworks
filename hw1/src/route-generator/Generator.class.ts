@@ -183,8 +183,8 @@ export default router;
   }
 
   async createApiIndexTemplate(): Promise<string> {
-    const importStr = `import ${this.route}Router from "./${this.route}/index;`;
-    const appUseStr = `app.use("/${this.route}", ${this.route}Router);`;
+    const importStr = `import ${this.route}Router from "./${this.route}/index";`;
+    const appUseStr = `app.use("/${this.route}", ${this.route}Router)";`;
     try {
       process.chdir(this.apiDirPath);
       const content = await this.readFile("index.ts");
