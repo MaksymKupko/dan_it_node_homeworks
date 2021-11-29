@@ -191,9 +191,17 @@ export default router;
       if (typeof content === "string" && content !== "") {
         const splitTerm = content.includes("\r\n") ? "\r\n" : "\n";
         const arr = content.split(splitTerm);
-        const index = arr.findIndex(item => item == "");
-        arr.splice(index, 0, importStr);
-        arr.splice(-2, 0, `  ${appUseStr}`);
+
+        const imports = arr.filter(str => str.includes("import"));
+        const lastImport = imports[imports.length - 1];
+        const lastImportIndex = arr.findIndex(str => str === lastImport);
+        arr.splice(lastImportIndex + 1, 0, importStr);
+
+        const appUseStrs = arr.filter(str => str.includes("app.use("));
+        const targetAppUseStr = appUseStrs[appUseStrs.length - 2];
+        const targetAppUseStrIndex = arr.findIndex(str => str === targetAppUseStr);
+        arr.splice(targetAppUseStrIndex + 1, 0, `  ${appUseStr}`);
+
         const result = arr.join("\n");
         return result;
       } else {
